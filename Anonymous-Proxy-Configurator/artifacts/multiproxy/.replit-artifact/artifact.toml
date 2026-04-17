@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "MultiProxy Anonymous Router"
+version = "1.0.0"
+id = "artifacts/multiproxy"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18737
+
+[services.development]
+run = "pnpm --filter @workspace/multiproxy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/multiproxy", "run", "build" ]
+publicDir = "artifacts/multiproxy/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18737"
+BASE_PATH = "/"

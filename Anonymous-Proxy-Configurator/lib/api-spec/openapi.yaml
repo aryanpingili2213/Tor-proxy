@@ -1,0 +1,952 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.2.0
+  description: MultiProxy Anonymous Router API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+  - name: system
+  - name: proxies
+  - name: ip
+  - name: logs
+  - name: openai
+    description: AI Security Analyst chat powered by OpenAI
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /system/status:
+    get:
+      operationId: getSystemStatus
+      tags: [system]
+      summary: Get overall system status
+      responses:
+        "200":
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStatus"
+
+  /system/info:
+    get:
+      operationId: getSystemInfo
+      tags: [system]
+      summary: Get Linux distro, CPU, RAM usage info
+      responses:
+        "200":
+          description: System info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemInfo"
+
+  /system/config:
+    get:
+      operationId: getConfig
+      tags: [system]
+      summary: Get application configuration
+      responses:
+        "200":
+          description: Config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfig"
+    put:
+      operationId: updateConfig
+      tags: [system]
+      summary: Update application configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppConfig"
+      responses:
+        "200":
+          description: Updated config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfig"
+
+  /system/tor/install:
+    post:
+      operationId: installTor
+      tags: [system]
+      summary: Check and install Tor if not present
+      responses:
+        "200":
+          description: Tor installation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallResult"
+
+  /system/tor/start:
+    post:
+      operationId: startTor
+      tags: [system]
+      summary: Start the Tor service
+      responses:
+        "200":
+          description: Tor service start result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/tor/stop:
+    post:
+      operationId: stopTor
+      tags: [system]
+      summary: Stop the Tor service
+      responses:
+        "200":
+          description: Tor service stop result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/tor/newnym:
+    post:
+      operationId: requestNewIdentity
+      tags: [system]
+      summary: Request a new Tor identity (change exit node IP)
+      responses:
+        "200":
+          description: New identity result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/proxychains/install:
+    post:
+      operationId: installProxychains
+      tags: [system]
+      summary: Check and install Proxychains if not present
+      responses:
+        "200":
+          description: Proxychains installation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallResult"
+
+  /system/proxychains/configure:
+    post:
+      operationId: configureProxychains
+      tags: [system]
+      summary: Configure proxychains.conf with dynamic chain and current proxies
+      responses:
+        "200":
+          description: Configuration result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResult"
+
+  /system/proxychains/backup:
+    post:
+      operationId: backupProxychains
+      tags: [system]
+      summary: Backup current proxychains.conf
+      responses:
+        "200":
+          description: Backup result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/proxychains/restore:
+    post:
+      operationId: restoreProxychains
+      tags: [system]
+      summary: Restore original proxychains.conf from backup
+      responses:
+        "200":
+          description: Restore result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/rotation/start:
+    post:
+      operationId: startProxyRotation
+      tags: [system]
+      summary: Start automatic proxy rotation
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                intervalSeconds:
+                  type: integer
+                  description: Rotation interval in seconds
+      responses:
+        "200":
+          description: Rotation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/rotation/stop:
+    post:
+      operationId: stopProxyRotation
+      tags: [system]
+      summary: Stop automatic proxy rotation
+      responses:
+        "200":
+          description: Rotation stopped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceResult"
+
+  /system/rotation/status:
+    get:
+      operationId: getRotationStatus
+      tags: [system]
+      summary: Get current proxy rotation status
+      responses:
+        "200":
+          description: Rotation status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RotationStatus"
+
+  /proxies:
+    get:
+      operationId: listProxies
+      tags: [proxies]
+      summary: List all configured proxies
+      responses:
+        "200":
+          description: List of proxies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Proxy"
+    post:
+      operationId: addProxy
+      tags: [proxies]
+      summary: Add a new proxy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProxy"
+      responses:
+        "201":
+          description: Proxy added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proxy"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /proxies/bulk-upload:
+    post:
+      operationId: bulkUploadProxies
+      tags: [proxies]
+      summary: Bulk import proxies from a text list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: "Newline-separated list of proxies (format: type:host:port or host:port)"
+                defaultType:
+                  type: string
+                  enum: [socks5, socks4, http, https]
+                  default: socks5
+              required: [text]
+      responses:
+        "200":
+          description: Bulk upload result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkUploadResult"
+
+  /proxies/remove-dead:
+    post:
+      operationId: removeDeadProxies
+      tags: [proxies]
+      summary: Remove all dead/failed proxies
+      responses:
+        "200":
+          description: Removal result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /proxies/{id}:
+    delete:
+      operationId: deleteProxy
+      tags: [proxies]
+      summary: Delete a proxy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proxy deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /proxies/{id}/validate:
+    post:
+      operationId: validateProxy
+      tags: [proxies]
+      summary: Validate if a proxy is alive
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Proxy validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProxyValidationResult"
+
+  /proxies/validate-all:
+    post:
+      operationId: validateAllProxies
+      tags: [proxies]
+      summary: Validate all proxies at once
+      responses:
+        "200":
+          description: All proxy validation results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProxyValidationResult"
+
+  /ip/original:
+    get:
+      operationId: getOriginalIp
+      tags: [ip]
+      summary: Get the original (non-proxied) public IP address
+      responses:
+        "200":
+          description: Original IP info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpInfo"
+
+  /ip/anonymous:
+    get:
+      operationId: getAnonymousIp
+      tags: [ip]
+      summary: Get the current public IP (through Tor if active)
+      responses:
+        "200":
+          description: Anonymous IP info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpInfo"
+
+  /ip/leak-test:
+    get:
+      operationId: runLeakTest
+      tags: [ip]
+      summary: Run a DNS leak test
+      responses:
+        "200":
+          description: DNS leak test results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeakTestResult"
+
+  /logs:
+    get:
+      operationId: getLogs
+      tags: [logs]
+      summary: Get system activity logs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [info, warn, error, all]
+            default: all
+      responses:
+        "200":
+          description: Log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LogEntry"
+
+  /logs/clear:
+    post:
+      operationId: clearLogs
+      tags: [logs]
+      summary: Clear all log entries
+      responses:
+        "200":
+          description: Logs cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+  /openai/conversations:
+    get:
+      operationId: listOpenaiConversations
+      tags: [openai]
+      summary: List all AI conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiConversation"
+    post:
+      operationId: createOpenaiConversation
+      tags: [openai]
+      summary: Create a new AI conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOpenaiConversationBody"
+      responses:
+        "201":
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversation"
+
+  /openai/conversations/{id}:
+    get:
+      operationId: getOpenaiConversation
+      tags: [openai]
+      summary: Get a conversation with all messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation with messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+    delete:
+      operationId: deleteOpenaiConversation
+      tags: [openai]
+      summary: Delete a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpenaiError"
+
+  /openai/conversations/{id}/messages:
+    get:
+      operationId: listOpenaiMessages
+      tags: [openai]
+      summary: List messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OpenaiMessage"
+    post:
+      operationId: sendOpenaiMessage
+      tags: [openai]
+      summary: Send a message and receive a streaming AI response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiMessageBody"
+      responses:
+        "200":
+          description: SSE stream of AI response chunks
+          content:
+            text/event-stream: {}
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    SystemStatus:
+      type: object
+      properties:
+        torInstalled:
+          type: boolean
+        torRunning:
+          type: boolean
+        proxychainsInstalled:
+          type: boolean
+        proxychainsConfigured:
+          type: boolean
+        proxyCount:
+          type: integer
+        activeProxyCount:
+          type: integer
+        torVersion:
+          type: string
+        proxychainsVersion:
+          type: string
+        uptime:
+          type: string
+        lastChecked:
+          type: string
+      required:
+        - torInstalled
+        - torRunning
+        - proxychainsInstalled
+        - proxychainsConfigured
+        - proxyCount
+        - activeProxyCount
+        - lastChecked
+
+    SystemInfo:
+      type: object
+      properties:
+        distro:
+          type: string
+        distroVersion:
+          type: string
+        kernel:
+          type: string
+        cpuUsagePercent:
+          type: number
+        ramUsedMb:
+          type: number
+        ramTotalMb:
+          type: number
+        ramUsagePercent:
+          type: number
+        uptime:
+          type: string
+        hostname:
+          type: string
+      required: [distro, cpuUsagePercent, ramUsedMb, ramTotalMb, ramUsagePercent]
+
+    AppConfig:
+      type: object
+      properties:
+        torPort:
+          type: integer
+          default: 9050
+        torControlPort:
+          type: integer
+          default: 9051
+        rotationIntervalSeconds:
+          type: integer
+          default: 180
+        autoRemoveDeadProxies:
+          type: boolean
+          default: false
+        logFilePath:
+          type: string
+        proxychainsConfigPath:
+          type: string
+        maxRetries:
+          type: integer
+          default: 3
+      required: [torPort, torControlPort, rotationIntervalSeconds, autoRemoveDeadProxies]
+
+    RotationStatus:
+      type: object
+      properties:
+        active:
+          type: boolean
+        intervalSeconds:
+          type: integer
+        nextRotationIn:
+          type: integer
+          description: Seconds until next rotation
+        rotationCount:
+          type: integer
+        currentProxyId:
+          type: integer
+      required: [active, rotationCount]
+
+    InstallResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        alreadyInstalled:
+          type: boolean
+        version:
+          type: string
+      required: [success, message, alreadyInstalled]
+
+    ServiceResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        status:
+          type: string
+      required: [success, message, status]
+
+    ConfigResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        configPath:
+          type: string
+        proxiesConfigured:
+          type: integer
+      required: [success, message]
+
+    BulkUploadResult:
+      type: object
+      properties:
+        added:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: integer
+        total:
+          type: integer
+        message:
+          type: string
+      required: [added, skipped, errors, total, message]
+
+    Proxy:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [socks5, socks4, http, https]
+        host:
+          type: string
+        port:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+        enabled:
+          type: boolean
+        status:
+          type: string
+          enum: [unknown, alive, dead, checking]
+        latencyMs:
+          type: integer
+        rating:
+          type: string
+          enum: [fast, medium, slow, unknown]
+        lastChecked:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - type
+        - host
+        - port
+        - enabled
+        - status
+        - rating
+        - createdAt
+
+    CreateProxy:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [socks5, socks4, http, https]
+        host:
+          type: string
+        port:
+          type: integer
+        username:
+          type: string
+        password:
+          type: string
+        enabled:
+          type: boolean
+      required: [type, host, port]
+
+    ProxyValidationResult:
+      type: object
+      properties:
+        proxyId:
+          type: integer
+        host:
+          type: string
+        port:
+          type: integer
+        alive:
+          type: boolean
+        latencyMs:
+          type: integer
+        rating:
+          type: string
+          enum: [fast, medium, slow, unknown]
+        message:
+          type: string
+      required: [proxyId, host, port, alive, rating]
+
+    IpInfo:
+      type: object
+      properties:
+        ip:
+          type: string
+        country:
+          type: string
+        countryCode:
+          type: string
+        city:
+          type: string
+        region:
+          type: string
+        isp:
+          type: string
+        org:
+          type: string
+        timezone:
+          type: string
+        isTor:
+          type: boolean
+        success:
+          type: boolean
+        error:
+          type: string
+      required: [success]
+
+    LeakTestResult:
+      type: object
+      properties:
+        leaked:
+          type: boolean
+        dnsServers:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+        details:
+          type: string
+        testedAt:
+          type: string
+      required: [leaked, dnsServers, testedAt]
+
+    LogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        level:
+          type: string
+          enum: [info, warn, error]
+        message:
+          type: string
+        source:
+          type: string
+        timestamp:
+          type: string
+        metadata:
+          type: string
+      required: [id, level, message, source, timestamp]
+
+    DeleteResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
+      required: [error]
+
+    OpenaiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, title, createdAt]
+
+    OpenaiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, conversationId, role, content, createdAt]
+
+    OpenaiConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/OpenaiMessage"
+      required: [id, title, createdAt, messages]
+
+    CreateOpenaiConversationBody:
+      type: object
+      properties:
+        title:
+          type: string
+      required: [title]
+
+    SendOpenaiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required: [content]
+
+    OpenaiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]

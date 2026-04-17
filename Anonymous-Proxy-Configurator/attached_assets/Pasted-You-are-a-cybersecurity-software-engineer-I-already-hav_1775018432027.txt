@@ -1,0 +1,58 @@
+You are a cybersecurity software engineer.
+
+I already have an application that installs and configures Tor and Proxychains automatically.
+
+Now I want you to upgrade this project by adding advanced features without breaking the existing functionality.
+
+Add the following EXTRA FEATURES:
+
+ANONYMITY FEATURES
+1. Add automatic proxy rotation (change proxy every few minutes).
+2. Add a button called "New Identity" that changes the Tor IP automatically.
+3. Add a real-time IP status checker that updates every 10 seconds.
+4. Add DNS leak detection.
+5. Add WebRTC leak detection.
+
+PROXY MANAGEMENT FEATURES
+6. Add a proxy testing system that checks:
+   - speed
+   - latency
+   - working/not working status
+7. Add bulk proxy upload using a .txt file.
+8. Add automatic removal of dead proxies.
+9. Add a proxy rating system (fast / medium / slow).
+
+SECURITY DASHBOARD FEATURES
+10. Create a modern cybersecurity dashboard UI.
+11. Show status indicators:
+   - Tor running
+   - Proxychains active
+   - Anonymous mode enabled
+12. Add animated status indicators (green = active, red = inactive).
+13. Add a real-time terminal log viewer inside the dashboard.
+
+SYSTEM FEATURES
+14. Add Linux distribution detection (Kali Linux / Ubuntu / Debian).
+15. Add automatic backup of proxychains.conf before editing.
+16. Add an option to restore the original configuration.
+17. Add error logging in a logs folder.
+18. Add system performance monitoring (CPU + RAM usage while using Tor).
+
+CODE IMPROVEMENTS
+19. Refactor the code into a modular structure:
+   - modules/
+   - utils/
+   - services/
+   - templates/
+   - static/
+20. Add a config.json file so users can customize:
+   - proxy rotation time
+   - Tor port
+   - log file location
+21. Add comments explaining every function.
+22. Do not remove any existing features.
+
+AFTER IMPLEMENTING
+23. Show the updated folder structure.
+24. Explain the new features clearly.
+25. Suggest 5 more advanced cybersecurity features that can be added later.
